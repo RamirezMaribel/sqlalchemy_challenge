@@ -24,6 +24,7 @@ Measurement=Base.classes.measurement
 Station=Base.classes.station
 
 # Create our session (link) from Python to the DB
+# this session is good for all app requests
 
 session = Session(engine)
 #################################################
@@ -45,8 +46,8 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/<start> enter a date here YYYY-MM-DD<br/>"
-        f"/api/v1.0/<start>/<end><br/>"
+        f"/api/v1.0/<start> Enter a date here (format: /YYYY-MM-DD)<br/>"
+        f"/api/v1.0/<start>/<end> Enter start and end dates here (format: /YYYY-MM-DD/YYYY-MM-DD)<br/>"
     )
 #2 of part 2 of homework
  # Convert the query results from your precipitation analysis 
@@ -68,6 +69,9 @@ def precipitation():
     #Return the JSON representation of your dictionary
     return jsonify(precipitation_dict)
 
+#Close session after use
+
+session.close() 
 
 #3 of part 2 of homework
 
@@ -87,9 +91,13 @@ def stations():
     #Return a JSON list of stations from the dataset
     return jsonify(stations_list)
 
+#Close session after use
+
+session.close() 
+
 #4 of paret 2 of homework
 
-#Query the dates and temperature observations of htem ost-active station for the previous year of data
+#Query the dates and temperature observations of the most-active station for the previous year of data
 
 
 @app.route("/api/v1.0/tobs")
@@ -112,17 +120,30 @@ def tobs():
   #Return a JSON list of temperature observations for the previous year   
     return jsonify(activestation_list)
 
+#Close session after use
+
+session.close() 
+
 #5 of part 2 of homework
 
 #Return a JSON list of the minimum temperature, the average temperature, and the maximum temperature fora specified start or start-end range.
 #For a specified start, calculate TMIN, TAVG, and TMAX for all the dates greater than or equal to the start date.
 #For a specified start date and end date, calculate TMIN, TAVG, and TMAX for the dates from the start date to the end date, inclusive.
 
-@app.route('/api/v1.0/<start>')
-def calc_temps_start(start):
-    min_temp=session.query(func.min(Measurement.tobs)).filter(Measurement.date>=start).scalar()
-    avg_temp=session.query(func.avg(Measurement.tobs)).filter(Measurement.date>=start).scalar()
-    max_temp=session.query(func.max(Measurement.tobs)).filter(Measurement.date>=start).scalar()
+@app.route('/api/v1.0/<start>/<end>')
+@app.route('/api/v1.0/<start>', defaults={'end':None})
+def calc_temps(start, end):
+    if end:
+        min_temp = session.query(func.min(Measurement.tobs)).filter(Measurement.date >= start, Measurement.date <= end).scalar()
+        avg_temp = session.query(func.avg(Measurement.tobs)).filter(Measurement.date >= start, Measurement.date <= end).scalar()
+        max_temp = session.query(func.max(Measurement.tobs)).filter(Measurement.date >= start, Measurement.date <= end).scalar()
+      
+    else:
+        min_temp=session.query(func.min(Measurement.tobs)).filter(Measurement.date>=start).scalar()
+        avg_temp=session.query(func.avg(Measurement.tobs)).filter(Measurement.date>=start).scalar()
+        max_temp=session.query(func.max(Measurement.tobs)).filter(Measurement.date>=start).scalar()
+
+
 
    #creating a dictionary
     calc_results_dict = {"min_temp": min_temp,
@@ -132,16 +153,12 @@ def calc_temps_start(start):
 #turning dictionary into list to jsonify it
     calc_results_list=list(calc_results_dict.values())
 
-    return jsonify(calc_results_list)
+#Return a JSON list of the minimum temperature, the average temperature, and the maximum temperature for a specified start or start-end range. 
+    return jsonify(calc_results_dict)
+  
+#Close session after use
 
-
-@app.route('/api/v1.0/<start>/<end>')
-def calc_temps_start_end(start, end):
-    min_temp = session.query(func.min(Measurement.tobs)).filter(Measurement.date >= start, Measurement.date <= end).scalar()
-    avg_temp = session.query(func.avg(Measurement.tobs)).filter(Measurement.date >= start, Measurement.date <= end).scalar()
-    max_temp = session.query(func.max(Measurement.tobs)).filter(Measurement.date >= start, Measurement.date <= end).scalar()
-
-
+session.close() 
 
 
 if __name__ == '__main__':
