@@ -69,9 +69,7 @@ def precipitation():
     #Return the JSON representation of your dictionary
     return jsonify(precipitation_dict)
 
-#Close session after use
 
-session.close() 
 
 #3 of part 2 of homework
 
@@ -91,9 +89,7 @@ def stations():
     #Return a JSON list of stations from the dataset
     return jsonify(stations_list)
 
-#Close session after use
-
-session.close() 
+ 
 
 #4 of paret 2 of homework
 
@@ -120,9 +116,6 @@ def tobs():
   #Return a JSON list of temperature observations for the previous year   
     return jsonify(activestation_list)
 
-#Close session after use
-
-session.close() 
 
 #5 of part 2 of homework
 
